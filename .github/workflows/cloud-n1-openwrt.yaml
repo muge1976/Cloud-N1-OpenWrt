@@ -28,6 +28,8 @@ jobs:
   build_openwrt:
     name: Build OpenWrt and release
     runs-on: ubuntu-22.04
+    permissions:
+      contents: write
 
     steps:
 
@@ -260,7 +262,7 @@ jobs:
         artifactErrorsFailBuild: true
         tag: ${{ env.tag_name }}
         commit: ${{ github.sha }}
-        token: ${{ secrets.actions_release }}
+        token: ${{ secrets.GITHUB_TOKEN }}
         body: |
           编译使用版本:
           ${{ env.useVersionInfo }}
@@ -278,7 +280,7 @@ jobs:
         keep_latest: 5
         delete_tags: true
       env:
-        GITHUB_TOKEN: ${{ secrets.actions_release }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   prune_runs:
     name: Clean up previous build runs
