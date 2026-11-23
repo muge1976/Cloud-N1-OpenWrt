@@ -2,7 +2,7 @@
 
 本项目使用 GitHub Actions 编译 Lean 的 OpenWrt 源码，并打包成适用于斐讯 N1（S905D）的刷机镜像。
 
-**[下载最新固件](https://github.com/huangqian8/Cloud-N1-OpenWrt/releases/latest)** · [查看构建记录](https://github.com/huangqian8/Cloud-N1-OpenWrt/actions/workflows/cloud-n1-openwrt.yaml)
+**[下载最新固件](https://github.com/muge1976/Cloud-N1-OpenWrt/releases/latest)** · [查看构建记录](https://github.com/muge1976/Cloud-N1-OpenWrt/actions/workflows/cloud-n1-openwrt.yaml)
 
 ## 编译方式
 
@@ -12,20 +12,27 @@
 
 ## 构建记录保留规则
 
-保留最近 5 个 Release 和最近 5 次成功构建记录。连续失败时，保留每次失败的日志供排查。下一次构建成功后，自动清理此前已结束的失败或取消记录。
+保留最近 3 个 Release 和最近 3 次成功构建记录。连续失败时，保留每次失败的日志供排查。下一次构建成功后，自动清理此前已结束的失败或取消记录。
 
 ## 固件配置
 
 编译目标为 ARM SystemReady（`armsr`），子目标为 64 位 `armv8`。完整编译选项见 [config.sh](config.sh)。
 
+- **默认管理地址**　`http://192.168.2.2`（root 分区 1GB）
+- **默认账号密码**　`root` / `password`
+
 <details>
 <summary>额外启用的插件和主题</summary>
 
-- `luci-app-docker`
-- `luci-app-dockerman`
-- `luci-theme-opentomcat`
-- `luci-app-adguardhome`
-- `luci-app-amlogic`
+- `luci-app-docker` / `luci-app-dockerman`（Docker 与容器管理）
+- `luci-app-openclash`（含 dnsmasq-full、kmod-nft-tproxy、kmod-tun、ruby 等依赖）
+- `luci-app-smartdns`（DNS 分流与缓存）
+- `luci-app-adblock`（DNS 级去广告，替代 AdGuardHome）
+- `luci-app-diskman`（磁盘/分区管理）
+- `luci-app-amlogic`（晶晨盒子刷写与 eMMC 安装）
+- `luci-theme-opentomcat`（主题）
+- `tailscale`（内网穿透/远程访问）
+- `htop`（进程监视）
 
 </details>
 
@@ -85,6 +92,7 @@
 <details>
 <summary>查看完整更新记录（2020–2026）</summary>
 
+- 20261123 默认 IP 改为 192.168.2.2、root 默认密码 password、分区提升到 1GB；集成 OpenClash / SmartDNS / Adblock / diskman / tailscale；Release 保留数改为 3
 - 20260515 修改打包脚本，获取实际内核版本，输出到 release 说明
 - 20250424 修正底层编译环境 `Ubuntu 20.04` 弃用造成的编译错误
 - 20250303 修正 `actions/upload-artifact` 版本升级造成的编译错误
