@@ -160,7 +160,7 @@ jobs:
           echo "::error::Expected armsr/armv8 generic target after defconfig"
           exit 1
         fi
-        for package in luci-app-adguardhome luci-app-amlogic luci-theme-opentomcat; do
+        for package in luci-app-amlogic luci-theme-opentomcat luci-app-openclash luci-app-adblock; do
           if ! grep -Fxq "CONFIG_PACKAGE_${package}=y" .config; then
             echo "::error::Required package missing after defconfig: $package"
             exit 1
