@@ -180,7 +180,6 @@ CONFIG_PACKAGE_losetup=y
 CONFIG_PACKAGE_lsattr=y
 CONFIG_PACKAGE_lsblk=y
 # CONFIG_PACKAGE_luci-app-accesscontrol is not set
-CONFIG_PACKAGE_luci-app-adguardhome=y
 CONFIG_PACKAGE_luci-app-amlogic=y
 # CONFIG_PACKAGE_luci-app-arpbind is not set
 # CONFIG_PACKAGE_luci-app-ddns is not set
@@ -209,39 +208,6 @@ CONFIG_PACKAGE_odhcpd-ipv6only=y
 CONFIG_PACKAGE_odhcpd_ipv6only_ext_cer_id=0
 CONFIG_PACKAGE_parted=y
 # CONFIG_PACKAGE_pdnsd-alt is not set
-CONFIG_PACKAGE_perl=y
-CONFIG_PACKAGE_perl-http-date=y
-CONFIG_PACKAGE_perlbase-base=y
-CONFIG_PACKAGE_perlbase-bytes=y
-CONFIG_PACKAGE_perlbase-charnames=y
-CONFIG_PACKAGE_perlbase-class=y
-CONFIG_PACKAGE_perlbase-config=y
-CONFIG_PACKAGE_perlbase-cwd=y
-CONFIG_PACKAGE_perlbase-dynaloader=y
-CONFIG_PACKAGE_perlbase-errno=y
-CONFIG_PACKAGE_perlbase-essential=y
-CONFIG_PACKAGE_perlbase-fcntl=y
-CONFIG_PACKAGE_perlbase-file=y
-CONFIG_PACKAGE_perlbase-filehandle=y
-CONFIG_PACKAGE_perlbase-getopt=y
-CONFIG_PACKAGE_perlbase-i18n=y
-CONFIG_PACKAGE_perlbase-integer=y
-CONFIG_PACKAGE_perlbase-io=y
-CONFIG_PACKAGE_perlbase-list=y
-CONFIG_PACKAGE_perlbase-locale=y
-CONFIG_PACKAGE_perlbase-params=y
-CONFIG_PACKAGE_perlbase-posix=y
-CONFIG_PACKAGE_perlbase-re=y
-CONFIG_PACKAGE_perlbase-scalar=y
-CONFIG_PACKAGE_perlbase-selectsaver=y
-CONFIG_PACKAGE_perlbase-socket=y
-CONFIG_PACKAGE_perlbase-symbol=y
-CONFIG_PACKAGE_perlbase-tie=y
-CONFIG_PACKAGE_perlbase-time=y
-CONFIG_PACKAGE_perlbase-unicode=y
-CONFIG_PACKAGE_perlbase-unicore=y
-CONFIG_PACKAGE_perlbase-utf8=y
-CONFIG_PACKAGE_perlbase-xsloader=y
 CONFIG_PACKAGE_pigz=y
 CONFIG_PACKAGE_pv=y
 CONFIG_PACKAGE_runc=y
@@ -259,8 +225,6 @@ CONFIG_PACKAGE_xfs-mkfs=y
 CONFIG_PACKAGE_xz=y
 CONFIG_PACKAGE_xz-utils=y
 CONFIG_PARTED_READLINE=y
-CONFIG_PERL_NOCOMMENT=y
-CONFIG_PERL_THREADS=y
 # CONFIG_TARGET_ROOTFS_CPIOGZ is not set
 # CONFIG_TARGET_ROOTFS_EXT4FS is not set
 # CONFIG_TARGET_ROOTFS_INITRAMFS is not set
@@ -300,4 +264,6 @@ CONFIG_PACKAGE_luci-app-diskman=y
 CONFIG_PACKAGE_luci-i18n-diskman-zh-cn=y
 CONFIG_PACKAGE_tailscale=y
 CONFIG_PACKAGE_htop=y
+CONFIG_PACKAGE_adblock=y
+CONFIG_PACKAGE_luci-app-adblock=y
 EOF

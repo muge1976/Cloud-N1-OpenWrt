@@ -14,11 +14,6 @@ clone_retry() {
   return 1
 }
 
-# Add luci-app-adguardhome
-clone_retry https://github.com/rufengsuixing/luci-app-adguardhome.git package-temp/luci-app-adguardhome
-mv -f package-temp/luci-app-adguardhome package/lean/
-rm -rf package-temp
-
 # Add luci-theme-opentomcat
 clone_retry https://github.com/Leo-Jo-My/luci-theme-opentomcat.git theme-temp/luci-theme-opentomcat
 rm -rf theme-temp/luci-theme-opentomcat/LICENSE
