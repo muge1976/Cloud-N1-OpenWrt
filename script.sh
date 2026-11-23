@@ -35,3 +35,12 @@ rm -rf package-temp
 clone_retry https://github.com/vernesong/OpenClash.git package-temp/OpenClash
 mv -f package-temp/OpenClash/luci-app-openclash package/lean/
 rm -rf package-temp
+
+# 默认 LAN IP 改为 192.168.2.2
+sed -i 's/ipaddr:-"192\.168\.1\.1"/ipaddr:-"192.168.2.2"/' package/base-files/files/bin/config_generate
+
+# root 默认密码设为 password（SHA-512 加密）
+root_hash="$(openssl passwd -6 -salt openwrt7 password)"
+sed -i -E "s@^root:[^:]*:@root:${root_hash}:@" package/base-files/files/etc/shadow
+
+grep -n '192.168.2.2' package/base-files/files/bin/config_generate
