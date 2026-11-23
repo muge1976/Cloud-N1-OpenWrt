@@ -30,3 +30,8 @@ rm -rf theme-temp
 clone_retry https://github.com/ophub/luci-app-amlogic.git package-temp/luci-app-amlogic
 mv -f package-temp/luci-app-amlogic/luci-app-amlogic package/lean/
 rm -rf package-temp
+
+# Add luci-app-openclash
+clone_retry https://github.com/vernesong/OpenClash.git package-temp/OpenClash
+mv -f package-temp/OpenClash/luci-app-openclash package/lean/
+rm -rf package-temp
