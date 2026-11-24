@@ -2,14 +2,18 @@
 set -euo pipefail
 cd openwrt
 
-# 固定 LEDE 源码到已知可编译的提交：上游 2026-11-23 把内核升到 6.18.65，
-# 导致 target/linux/armsr/armv8/patches-6.18/30-0005-PCI-pwrctrl 补丁 hunk 失败。
+# 固定 LEDE 源码到已知可编译的提交（内核 6.18.64）。
+# 上游 2026-11-23 把内核升到 6.18.65 并重构了 drivers/pci/pwrctrl（ctx -> pwrctrl），
+# 而 target/linux/armsr/armv8/patches-6.18 尚未适配，30-0005-PCI-pwrctrl 及其后续整串补丁
+# 必然冲突（Hunk #1 FAILED at 64），构建必失败。
 PIN_COMMIT="81ed85f7559527ab8dda2e2fdb5bb35e39712d7e"
-git fetch --depth 100 origin master >/dev/null 2>&1 || true
-if git cat-file -e "^{commit}" 2>/dev/null; then
-  git reset --hard ""
+git fetch --depth 300 origin master >/dev/null 2>&1 || true
+if git cat-file -e "${PIN_COMMIT}^{commit}" 2>/dev/null; then
+  git reset --hard "$PIN_COMMIT" >/dev/null
+  echo "LEDE pinned to $(git log -1 --oneline)"
 else
-  echo "WARN: 固定提交未能拉取到，继续使用当前 master" >&2
+  echo "::error::无法定位固定提交 $PIN_COMMIT，中止构建以免产出坏包" >&2
+  exit 1
 fi
 
 clone_retry() {
