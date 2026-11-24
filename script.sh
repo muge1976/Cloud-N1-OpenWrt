@@ -2,6 +2,16 @@
 set -euo pipefail
 cd openwrt
 
+# 固定 LEDE 源码到已知可编译的提交：上游 2026-11-23 把内核升到 6.18.65，
+# 导致 target/linux/armsr/armv8/patches-6.18/30-0005-PCI-pwrctrl 补丁 hunk 失败。
+PIN_COMMIT="81ed85f7559527ab8dda2e2fdb5bb35e39712d7e"
+git fetch --depth 100 origin master >/dev/null 2>&1 || true
+if git cat-file -e "^{commit}" 2>/dev/null; then
+  git reset --hard ""
+else
+  echo "WARN: 固定提交未能拉取到，继续使用当前 master" >&2
+fi
+
 clone_retry() {
   local repo="$1"
   local target="$2"
