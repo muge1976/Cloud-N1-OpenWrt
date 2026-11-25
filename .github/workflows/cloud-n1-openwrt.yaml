@@ -11,7 +11,8 @@ on:
       - 'config.sh'
   workflow_dispatch:
   schedule:
-    - cron: 0 8 * * 0
+    # 每 3 天检测一次上游更新（UTC 20:00 = 北京时间次日 04:00）
+    - cron: 0 20 */3 * *
 
 env:
   REPO_URL: https://github.com/coolsnowwolf/lede
@@ -25,8 +26,36 @@ env:
   KERNEL_TAG: stable
 
 jobs:
+  check_updates:
+    name: Check upstream updates
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      build: ${{ steps.gate.outputs.build }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v6
+    - name: Compare upstream commit
+      id: gate
+      run: |
+        set -euo pipefail
+        upstream="$(git ls-remote https://github.com/coolsnowwolf/lede master | cut -c1-40)"
+        last="$(cat .upstream-sha 2>/dev/null || echo none)"
+        echo "upstream=$upstream"
+        echo "last_built=$last"
+        if [[ "$upstream" == "$last" && "$GITHUB_EVENT_NAME" == "schedule" ]]; then
+          echo "上游无更新，跳过本次编译"
+          echo "build=false" >> "$GITHUB_OUTPUT"
+        else
+          echo "需要编译"
+          echo "build=true" >> "$GITHUB_OUTPUT"
+        fi
+
   build_openwrt:
     name: Build OpenWrt and release
+    needs: check_updates
+    if: needs.check_updates.outputs.build == 'true'
     runs-on: ubuntu-22.04
     permissions:
       contents: write
@@ -272,6 +301,18 @@ jobs:
             内核版本：${{ env.KERNEL_VERSION }}
             默认IP：192.168.2.2 默认用户名密码： root/password
         artifacts: "${{ env.RELEASE_DIR }}/*"
+
+    - name: Record upstream commit
+      if: success() && steps.release.outcome == 'success'
+      run: |
+        set -euo pipefail
+        upstream="$(git ls-remote https://github.com/coolsnowwolf/lede master | cut -c1-40)"
+        echo "$upstream" > .upstream-sha
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add .upstream-sha
+        git commit -m "chore: record upstream ${upstream}" || echo "无变化"
+        git push || echo "推送失败，忽略"
 
     - name: Remove old Releases
       if: success() && steps.release.outcome == 'success'

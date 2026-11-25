@@ -11,7 +11,8 @@ on:
       - 'config-x86.sh'
   workflow_dispatch:
   schedule:
-    - cron: 0 9 * * 6
+    # 每 3 天检测一次上游更新（UTC 20:00 = 北京时间次日 04:00），与 N1 版同时触发
+    - cron: 0 20 */3 * *
 
 env:
   REPO_URL: https://github.com/coolsnowwolf/lede
@@ -21,8 +22,36 @@ env:
   TZ: Asia/Shanghai
 
 jobs:
+  check_updates:
+    name: Check upstream updates
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      build: ${{ steps.gate.outputs.build }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v6
+    - name: Compare upstream commit
+      id: gate
+      run: |
+        set -euo pipefail
+        upstream="$(git ls-remote https://github.com/coolsnowwolf/lede master | cut -c1-40)"
+        last="$(cat .upstream-sha-x86 2>/dev/null || echo none)"
+        echo "upstream=$upstream"
+        echo "last_built=$last"
+        if [[ "$upstream" == "$last" && "$GITHUB_EVENT_NAME" == "schedule" ]]; then
+          echo "上游无更新，跳过本次编译"
+          echo "build=false" >> "$GITHUB_OUTPUT"
+        else
+          echo "需要编译"
+          echo "build=true" >> "$GITHUB_OUTPUT"
+        fi
+
   build_x86:
     name: Build x86_64 and release
+    needs: check_updates
+    if: needs.check_updates.outputs.build == 'true'
     runs-on: ubuntu-22.04
     permissions:
       contents: write
@@ -184,3 +213,15 @@ jobs:
             默认IP：192.168.2.2 默认用户名密码：root/password
             开机方式：`*-combined.img.gz` 走 BIOS 启动（VMware 默认即可）；
                       `*-combined-efi.img.gz` 走 UEFI 启动（Hyper-V / 纯 UEFI 机器用这个）
+
+    - name: Record upstream commit
+      if: success() && steps.release.outcome == 'success'
+      run: |
+        set -euo pipefail
+        upstream="$(git ls-remote https://github.com/coolsnowwolf/lede master | cut -c1-40)"
+        echo "$upstream" > .upstream-sha-x86
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add .upstream-sha-x86
+        git commit -m "chore(x86): record upstream ${upstream}" || echo "无变化"
+        git push || echo "推送失败，忽略"
