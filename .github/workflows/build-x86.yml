@@ -113,8 +113,10 @@ jobs:
       run: |
         cd openwrt
         make defconfig
-        if ! grep -Fxq 'CONFIG_TARGET_x86_64_Generic=y' .config; then
-          echo "::error::Expected x86/64 Generic target after defconfig"
+        echo "=== 目标平台相关配置 ==="
+        grep -E '^CONFIG_TARGET_' .config | head -20 || true
+        if ! grep -Fxq 'CONFIG_TARGET_x86_64=y' .config; then
+          echo "::error::Expected x86/64 subtarget after defconfig"
           exit 1
         fi
         for package in luci-app-amlogic luci-theme-opentomcat luci-app-openclash luci-app-adblock; do
