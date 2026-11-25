@@ -313,7 +313,7 @@ jobs:
         git config user.email "github-actions[bot]@users.noreply.github.com"
         git add .upstream-sha
         git commit -m "chore: record upstream ${upstream}" || echo "无变化"
-        git push || echo "推送失败，忽略"
+        git push origin HEAD:main || echo "推送失败，忽略"
 
     - name: Remove old Releases
       if: success() && steps.release.outcome == 'success'
