@@ -180,10 +180,10 @@ jobs:
         fi
         release_dir="$RUNNER_TEMP/release-assets"
         mkdir -p "$release_dir"
-        for f in "${images[@]}" *.manifest config.buildinfo; do
+        # 发布只保留刷机包（combined / combined-efi 的 img.gz）
+        for f in "${images[@]}"; do
           [[ -f "$f" ]] && [[ -s "$f" ]] && cp -- "$f" "$release_dir/"
         done
-        rm -rf "$release_dir"/*.buildinfo.tmp
         ls -lh "$release_dir"
         echo "RELEASE_DIR=$release_dir" >> "$GITHUB_ENV"
         echo "status=success" >> "$GITHUB_OUTPUT"
