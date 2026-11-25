@@ -21,7 +21,8 @@ env:
   CONFIG_SH: config.sh
   UPLOAD_FIRMWARE: true
   TZ: Asia/Shanghai
-  KERNEL_VERSION: latest
+  # 固定 6.18.64：与 LEDE 侧锁定的内核一致，且 ophub/kernel 目前没有 6.18.65 内核包（会 404）
+  KERNEL_VERSION: 6.18.64
   KERNEL_REPO_URL: ophub/kernel
   KERNEL_TAG: stable
 
