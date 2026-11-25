@@ -180,9 +180,10 @@ jobs:
         fi
         release_dir="$RUNNER_TEMP/release-assets"
         mkdir -p "$release_dir"
-        # 发布只保留刷机包（combined / combined-efi 的 img.gz）
+        build_date="$(date +%Y%m%d)"
+        # 发布只保留刷机包（combined / combined-efi 的 img.gz），文件名前加编译日期
         for f in "${images[@]}"; do
-          [[ -f "$f" ]] && [[ -s "$f" ]] && cp -- "$f" "$release_dir/"
+          [[ -f "$f" ]] && [[ -s "$f" ]] && cp -- "$f" "$release_dir/${build_date}_$(basename "$f")"
         done
         ls -lh "$release_dir"
         echo "RELEASE_DIR=$release_dir" >> "$GITHUB_ENV"
