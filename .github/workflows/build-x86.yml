@@ -1,0 +1,184 @@
+name: Build OpenWrt x86_64 (VMware/Hyper-V)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/build-x86.yml'
+      - 'files/**'
+      - 'script.sh'
+      - 'config-x86.sh'
+  workflow_dispatch:
+  schedule:
+    - cron: 0 9 * * 6
+
+env:
+  REPO_URL: https://github.com/coolsnowwolf/lede
+  REPO_BRANCH: master
+  SCRIPT_SH: script.sh
+  CONFIG_SH: config-x86.sh
+  TZ: Asia/Shanghai
+
+jobs:
+  build_x86:
+    name: Build x86_64 and release
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+
+    steps:
+
+    - name: Free Disk Space (Ubuntu)
+      uses: jlumbroso/free-disk-space@v1.3.1
+      continue-on-error: true
+      with:
+        tool-cache: true
+        android: true
+        dotnet: true
+        haskell: true
+        large-packages: true
+        swap-storage: true
+
+    - name: Checkout
+      uses: actions/checkout@v6
+      with:
+        ref: ${{ github.sha }}
+
+    - name: Disk space
+      run: df -h
+
+    - name: Initialization environment
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        . /etc/os-release
+        sources="$RUNNER_TEMP/ubuntu.list"
+        cat > "$sources" <<EOF
+        deb https://archive.ubuntu.com/ubuntu $VERSION_CODENAME main restricted universe multiverse
+        deb https://archive.ubuntu.com/ubuntu $VERSION_CODENAME-updates main restricted universe multiverse
+        deb https://security.ubuntu.com/ubuntu $VERSION_CODENAME-security main restricted universe multiverse
+        EOF
+        apt_options=(-o "Dir::Etc::sourcelist=$sources" -o Dir::Etc::sourceparts=-
+                     -o Acquire::Retries=3 -o Acquire::https::Timeout=20)
+        sudo apt-get "${apt_options[@]}" -o APT::Update::Error-Mode=any -qq update
+        sudo -E apt-get "${apt_options[@]}" -qy install ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libfuse-dev libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libpython3-dev libreadline-dev libssl-dev libtool lrzsz mkisofs msmtp ninja-build p7zip p7zip-full patch pkgconf python2.7 python3 python3-pyelftools python3-setuptools qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev
+        sudo timedatectl set-timezone "$TZ"
+
+    - name: Clone source code
+      run: |
+        git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
+        cd openwrt
+        useVersionInfo=$(git show -s --date=short --format="date: %cd<br/>commit: %s<br/>commit hash: %H")
+        echo "useVersionInfo=$useVersionInfo" >> $GITHUB_ENV
+        echo "DATE=$(date "+%Y-%m-%d %H:%M:%S")" >> $GITHUB_ENV
+        echo "tag_name=$(date +%Y%m%d)-x86-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> $GITHUB_ENV
+
+    - name: Update feeds
+      run: |
+        if [[ -e files ]]; then
+          mv files openwrt/files
+        fi
+        chmod +x $SCRIPT_SH
+        ./$SCRIPT_SH
+        cd openwrt
+        if ! grep -qE '^src-git[[:space:]]+helloworld([[:space:]]|$)' feeds.conf.default; then
+          echo "src-git helloworld https://github.com/fw876/helloworld.git" >> "feeds.conf.default"
+        fi
+        for attempt in 1 2 3; do
+          ./scripts/feeds update -a && break
+          [[ "$attempt" -eq 3 ]] && exit 1
+          sleep 10
+        done
+        luci_config="feeds/luci/modules/luci-base/root/etc/config/luci"
+        if [[ -f "$luci_config" ]]; then
+          sed -i 's/bootstrap/opentomcat/g' "$luci_config"
+        fi
+        xfsprogs_makefile="feeds/packages/utils/xfsprogs/Makefile"
+        if [[ -f "$xfsprogs_makefile" ]]; then
+          sed -i 's/TARGET_CFLAGS += -DHAVE_MAP_SYNC/TARGET_CFLAGS += -DHAVE_MAP_SYNC -D_LARGEFILE64_SOURCE/' "$xfsprogs_makefile"
+        fi
+
+    - name: Install feeds
+      run: |
+        cd openwrt
+        ./scripts/feeds install -a
+
+    - name: Load custom configuration
+      run: |
+        chmod +x $CONFIG_SH
+        ./$CONFIG_SH
+
+    - name: Download package
+      run: |
+        cd openwrt
+        make defconfig
+        if ! grep -Fxq 'CONFIG_TARGET_x86_64_Generic=y' .config; then
+          echo "::error::Expected x86/64 Generic target after defconfig"
+          exit 1
+        fi
+        for package in luci-app-amlogic luci-theme-opentomcat luci-app-openclash luci-app-adblock; do
+          if ! grep -Fxq "CONFIG_PACKAGE_${package}=y" .config; then
+            echo "::error::Required package missing after defconfig: $package"
+            exit 1
+          fi
+        done
+        make download -j8
+        find dl -size -1024c -exec rm -f {} \;
+
+    - name: Compile the firmware
+      run: |
+        cd openwrt
+        echo "$(nproc) thread compile"
+        make -j$(nproc) || make -j1 V=s
+        df -h
+        du -h --max-depth=1 ./bin
+        rm -rf ./build_dir
+
+    - name: Organize images
+      id: organize
+      run: |
+        set -euo pipefail
+        cd openwrt/bin/targets/x86/64
+        ls -lh
+        shopt -s nullglob
+        images=(*combined*.img.gz *combined*.img)
+        if [[ ${#images[@]} -eq 0 ]]; then
+          echo "::error::No x86 combined image produced"
+          exit 1
+        fi
+        release_dir="$RUNNER_TEMP/release-assets"
+        mkdir -p "$release_dir"
+        for f in "${images[@]}" *.manifest config.buildinfo; do
+          [[ -f "$f" ]] && [[ -s "$f" ]] && cp -- "$f" "$release_dir/"
+        done
+        rm -rf "$release_dir"/*.buildinfo.tmp
+        ls -lh "$release_dir"
+        echo "RELEASE_DIR=$release_dir" >> "$GITHUB_ENV"
+        echo "status=success" >> "$GITHUB_OUTPUT"
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      if: success() && steps.organize.outputs.status == 'success'
+      with:
+        name: OpenWrt_x86_64
+        path: ${{ env.RELEASE_DIR }}/*
+
+    - name: Create release
+      id: release
+      if: success() && steps.organize.outputs.status == 'success'
+      uses: ncipollo/release-action@v1
+      with:
+        name: ${{ env.DATE }} | OpenWrt x86_64 自动编译
+        artifactErrorsFailBuild: true
+        tag: ${{ env.tag_name }}
+        commit: ${{ github.sha }}
+        token: ${{ secrets.GITHUB_TOKEN }}
+        body: |
+          编译使用版本:
+          ${{ env.useVersionInfo }}
+
+          x86_64 版本（给 VMware / Hyper-V / PVE 用）：
+            默认IP：192.168.2.2 默认用户名密码：root/password
+            开机方式：`*-combined.img.gz` 走 BIOS 启动（VMware 默认即可）；
+                      `*-combined-efi.img.gz` 走 UEFI 启动（Hyper-V / 纯 UEFI 机器用这个）
