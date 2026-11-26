@@ -111,9 +111,15 @@ jobs:
         chmod +x $SCRIPT_SH
         ./$SCRIPT_SH
         cd openwrt
-        if ! grep -qE '^src-git[[:space:]]+helloworld([[:space:]]|$)' feeds.conf.default; then
-          echo "src-git helloworld https://github.com/fw876/helloworld.git" >> "feeds.conf.default"
-        fi
+        # 追加第三方源：helloworld（ssr-plus 等）、kenzok8/small（lucky/openlist/clouddrive2 等）、
+        # kenzok8/openwrt-packages（passwall 依赖、主题、部分 luci 应用）
+        for feed in "helloworld https://github.com/fw876/helloworld.git" \
+                    "small https://github.com/kenzok8/small-package.git" \
+                    "kz https://github.com/kenzok8/openwrt-packages.git"; do
+          name="${feed%% *}"
+          url="${feed#* }"
+          grep -qE "^src-git[[:space:]]+$name([[:space:]]|$)" feeds.conf.default || echo "src-git $name $url" >> "feeds.conf.default"
+        done
         for attempt in 1 2 3; do
           ./scripts/feeds update -a && break
           [[ "$attempt" -eq 3 ]] && exit 1
@@ -121,7 +127,7 @@ jobs:
         done
         luci_config="feeds/luci/modules/luci-base/root/etc/config/luci"
         if [[ -f "$luci_config" ]]; then
-          sed -i 's/bootstrap/opentomcat/g' "$luci_config"
+          sed -i "s/bootstrap/argon/g" "$luci_config"
         fi
         xfsprogs_makefile="feeds/packages/utils/xfsprogs/Makefile"
         if [[ -f "$xfsprogs_makefile" ]]; then
@@ -148,7 +154,7 @@ jobs:
           echo "::error::Expected x86/64 subtarget after defconfig"
           exit 1
         fi
-        for package in luci-theme-opentomcat luci-app-openclash luci-app-adblock; do
+        for package in luci-app-openclash luci-app-adblock luci-app-lucky; do
           if ! grep -Fxq "CONFIG_PACKAGE_${package}=y" .config; then
             echo "::error::Required package missing after defconfig: $package"
             exit 1
@@ -212,7 +218,7 @@ jobs:
           ${{ env.useVersionInfo }}
 
           x86_64 版本（给 VMware / Hyper-V / PVE 用）：
-            默认IP：192.168.2.2 默认用户名密码：root/password
+            默认IP：192.168.2.3 默认用户名密码：root/password
             开机方式：`*-combined.img.gz` 走 BIOS 启动（VMware 默认即可）；
                       `*-combined-efi.img.gz` 走 UEFI 启动（Hyper-V / 纯 UEFI 机器用这个）
 

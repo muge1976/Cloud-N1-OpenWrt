@@ -151,9 +151,15 @@ jobs:
         chmod +x $SCRIPT_SH
         ./$SCRIPT_SH
         cd openwrt
-        if ! grep -qE '^src-git[[:space:]]+helloworld([[:space:]]|$)' feeds.conf.default; then
-          echo "src-git helloworld https://github.com/fw876/helloworld.git" >> "feeds.conf.default"
-        fi
+        # 追加第三方源：helloworld（ssr-plus 等）、kenzok8/small（lucky/openlist/clouddrive2 等）、
+        # kenzok8/openwrt-packages（passwall 依赖、主题、部分 luci 应用）
+        for feed in "helloworld https://github.com/fw876/helloworld.git" \
+                    "small https://github.com/kenzok8/small-package.git" \
+                    "kz https://github.com/kenzok8/openwrt-packages.git"; do
+          name="${feed%% *}"
+          url="${feed#* }"
+          grep -qE "^src-git[[:space:]]+$name([[:space:]]|$)" feeds.conf.default || echo "src-git $name $url" >> "feeds.conf.default"
+        done
         for attempt in 1 2 3; do
           ./scripts/feeds update -a && break
           [[ "$attempt" -eq 3 ]] && exit 1
@@ -161,7 +167,7 @@ jobs:
         done
         luci_config="feeds/luci/modules/luci-base/root/etc/config/luci"
         if [[ -f "$luci_config" ]]; then
-          sed -i 's/bootstrap/opentomcat/g' "$luci_config"
+          sed -i "s/bootstrap/argon/g" "$luci_config"
         else
           echo "LuCI config is unavailable; skipping default theme adjustment"
         fi
@@ -190,7 +196,7 @@ jobs:
           echo "::error::Expected armsr/armv8 generic target after defconfig"
           exit 1
         fi
-        for package in luci-app-amlogic luci-theme-opentomcat luci-app-openclash luci-app-adblock; do
+        for package in luci-app-amlogic luci-app-openclash luci-app-adblock luci-app-lucky; do
           if ! grep -Fxq "CONFIG_PACKAGE_${package}=y" .config; then
             echo "::error::Required package missing after defconfig: $package"
             exit 1
@@ -301,7 +307,7 @@ jobs:
           刷机固件简介：
             打包日期：${{ env.PACKAGED_OUTPUTDATE }}
             内核版本：${{ env.KERNEL_VERSION }}
-            默认IP：192.168.2.2 默认用户名密码： root/password
+            默认IP：192.168.2.3 默认用户名密码： root/password
         artifacts: "${{ env.RELEASE_DIR }}/*"
 
     - name: Record upstream commit
