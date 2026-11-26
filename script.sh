@@ -28,11 +28,8 @@ clone_retry() {
   return 1
 }
 
-# Add luci-theme-opentomcat
-clone_retry https://github.com/Leo-Jo-My/luci-theme-opentomcat.git theme-temp/luci-theme-opentomcat
-rm -rf theme-temp/luci-theme-opentomcat/LICENSE
-rm -rf theme-temp/luci-theme-opentomcat/README.md
-mv -f theme-temp/luci-theme-opentomcat package/lean/
+# 主题统一使用 feeds 里的 luci-theme-argon（不再引入第三方 opentomcat）
+
 rm -rf theme-temp
 
 # Add luci-app-amlogic
@@ -44,12 +41,18 @@ rm -rf package-temp
 clone_retry https://github.com/vernesong/OpenClash.git package-temp/OpenClash
 mv -f package-temp/OpenClash/luci-app-openclash package/lean/
 rm -rf package-temp
+# 固件在线更新的仓库地址改为本仓库（默认是 ophub/amlogic-s9xxx-openwrt）
+amlogic_repo=https://github.com/muge1976/Cloud-N1-OpenWrt
+sed -i "s|https://github.com/ophub/amlogic-s9xxx-openwrt|${amlogic_repo}|g" \
+  package/lean/luci-app-amlogic/root/etc/config/amlogic \
+  package/lean/luci-app-amlogic/htdocs/luci-static/resources/view/amlogic/config.js
+grep -rn "muge1976/Cloud-N1-OpenWrt" package/lean/luci-app-amlogic/root/etc/config/amlogic
 
-# 默认 LAN IP 改为 192.168.2.2
-sed -i 's/ipaddr:-"192\.168\.1\.1"/ipaddr:-"192.168.2.2"/' package/base-files/files/bin/config_generate
+# 默认 LAN IP 改为 192.168.2.3
+sed -i 's/ipaddr:-"192\.168\.1\.1"/ipaddr:-"192.168.2.3"/' package/base-files/files/bin/config_generate
 
 # root 默认密码设为 password（SHA-512 加密）
 root_hash="$(openssl passwd -6 -salt openwrt7 password)"
 sed -i -E "s@^root:[^:]*:@root:${root_hash}:@" package/base-files/files/etc/shadow
 
-grep -n '192.168.2.2' package/base-files/files/bin/config_generate
+grep -n '192.168.2.3' package/base-files/files/bin/config_generate
