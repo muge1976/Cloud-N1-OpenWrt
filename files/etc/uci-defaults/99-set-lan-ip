@@ -1,9 +1,9 @@
 #!/bin/sh
-# 首次开机执行：把 LAN 固定为 192.168.2.2
+# 首次开机执行：把 LAN 固定为 192.168.2.3
 # 用于覆盖镜像里打包脚本写入的默认 192.168.1.1，执行后本脚本会被自动删除
 [ -f /etc/config/network ] || exit 0
 uci -q get network.lan >/dev/null 2>&1 || exit 0
-uci -q set network.lan.ipaddr='192.168.2.2'
+uci -q set network.lan.ipaddr='192.168.2.3'
 uci -q set network.lan.netmask='255.255.255.0'
 uci -q commit network
 exit 0
