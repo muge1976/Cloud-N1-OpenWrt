@@ -254,8 +254,8 @@ CONFIG_PACKAGE_getrandom=y
 CONFIG_PACKAGE_giflib-utils=y
 CONFIG_PACKAGE_glib2=y
 CONFIG_PACKAGE_gowebdav=y
-CONFIG_PACKAGE_grub2=y
-CONFIG_PACKAGE_grub2-efi=y
+# CONFIG_PACKAGE_grub2 is not set
+# CONFIG_PACKAGE_grub2-efi is not set
 CONFIG_PACKAGE_haproxy=y
 CONFIG_PACKAGE_hd-idle=y
 CONFIG_PACKAGE_htop=y
