@@ -181,7 +181,10 @@ jobs:
             exit 1
           fi
         done
-        make download -j8
+        if ! make download -j8; then
+          echo "::error::源码包下载失败，请检查上面 failed to build 的包（多为上游地址失效）"
+          exit 1
+        fi
         find dl -size -1024c -exec rm -f {} \;
 
     - name: Compile the firmware
