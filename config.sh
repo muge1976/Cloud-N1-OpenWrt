@@ -9,6 +9,7 @@ CONFIG_KMOD_FS_KSMBD=n
 CONFIG_PACKAGE_kmod-fs-ksmbd=n
 CONFIG_PACKAGE_ksmbd-server=n
 CONFIG_PACKAGE_autosamba=n
+CONFIG_CCACHE=y
 CONFIG_TARGET_armsr=y
 CONFIG_TARGET_armsr_armv8=y
 CONFIG_TARGET_armsr_armv8_DEVICE_generic=y
@@ -461,7 +462,7 @@ CONFIG_PACKAGE_kmod-nls-base=y
 CONFIG_PACKAGE_kmod-nls-cp437=y
 CONFIG_PACKAGE_kmod-nls-iso8859-1=y
 CONFIG_PACKAGE_kmod-nls-utf8=y
-CONFIG_PACKAGE_kmod-oaf=y
+# CONFIG_PACKAGE_kmod-oaf is not set
 CONFIG_PACKAGE_kmod-oid-registry=y
 CONFIG_PACKAGE_kmod-ovpn-backports=y
 CONFIG_PACKAGE_kmod-pcnet32=y
@@ -635,7 +636,7 @@ CONFIG_PACKAGE_luci-app-netdata=y
 CONFIG_PACKAGE_luci-app-nfs=y
 CONFIG_PACKAGE_luci-app-nlbwmon=y
 CONFIG_PACKAGE_luci-app-nps=y
-CONFIG_PACKAGE_luci-app-oaf=y
+# CONFIG_PACKAGE_luci-app-oaf is not set
 CONFIG_PACKAGE_luci-app-omcproxy=y
 CONFIG_PACKAGE_luci-app-openclash=y
 CONFIG_PACKAGE_luci-app-openlist=y

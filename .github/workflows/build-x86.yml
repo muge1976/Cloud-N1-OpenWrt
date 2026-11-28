@@ -114,6 +114,16 @@ jobs:
         echo "DATE=$(date "+%Y-%m-%d %H:%M:%S")" >> $GITHUB_ENV
         echo "tag_name=$(date +%Y%m%d)-x86-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> $GITHUB_ENV
 
+    - name: Restore ccache and downloads
+      uses: actions/cache@v4
+      with:
+        path: |
+          openwrt/dl
+          .ccache
+        key: ${{ runner.os }}-owrt-${{ hashFiles('config*.sh','script.sh') }}
+        restore-keys: |
+          ${{ runner.os }}-owrt-
+
     - name: Update feeds
       run: |
         if [[ -e files ]]; then
@@ -178,7 +188,15 @@ jobs:
       run: |
         cd openwrt
         echo "$(nproc) thread compile"
-        make -j$(nproc) || make -j1 V=s
+        export CCACHE_DIR="$GITHUB_WORKSPACE/.ccache"
+        export CCACHE_MAXSIZE=2G
+        ccache --show-stats || true
+        if ! make -j$(nproc); then
+          echo "::error::编译失败，下面打印各包错误摘要"
+          grep -h -B2 -A6 "Error 1\|failed to build" logs/*.txt 2>/dev/null | tail -200 || true
+          exit 1
+        fi
+        ccache --show-stats || true
         df -h
         du -h --max-depth=1 ./bin
         rm -rf ./build_dir

@@ -4,6 +4,7 @@ cd openwrt
 # x86_64 版本：与 N1 版共用同一套插件清单，只把目标平台换成 x86/64 Generic（可在 VMware/Hyper-V 里直接跑）
 rm -rf package/kernel/ksmbd
 cat >> .config <<EOF
+CONFIG_CCACHE=y
 CONFIG_TARGET_x86=y
 CONFIG_TARGET_x86_64=y
 CONFIG_TARGET_x86_64_Generic=y
@@ -463,7 +464,7 @@ CONFIG_PACKAGE_kmod-nls-base=y
 CONFIG_PACKAGE_kmod-nls-cp437=y
 CONFIG_PACKAGE_kmod-nls-iso8859-1=y
 CONFIG_PACKAGE_kmod-nls-utf8=y
-CONFIG_PACKAGE_kmod-oaf=y
+# CONFIG_PACKAGE_kmod-oaf is not set
 CONFIG_PACKAGE_kmod-oid-registry=y
 CONFIG_PACKAGE_kmod-ovpn-backports=y
 CONFIG_PACKAGE_kmod-pcnet32=y
@@ -637,7 +638,7 @@ CONFIG_PACKAGE_luci-app-netdata=y
 CONFIG_PACKAGE_luci-app-nfs=y
 CONFIG_PACKAGE_luci-app-nlbwmon=y
 CONFIG_PACKAGE_luci-app-nps=y
-CONFIG_PACKAGE_luci-app-oaf=y
+# CONFIG_PACKAGE_luci-app-oaf is not set
 CONFIG_PACKAGE_luci-app-omcproxy=y
 CONFIG_PACKAGE_luci-app-openclash=y
 CONFIG_PACKAGE_luci-app-openlist=y
