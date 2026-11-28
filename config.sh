@@ -848,7 +848,7 @@ CONFIG_PACKAGE_transmission-web-control=y
 CONFIG_PACKAGE_tree=y
 CONFIG_PACKAGE_trojan=y
 CONFIG_PACKAGE_ttyd=y
-CONFIG_PACKAGE_tuic-client=y
+# CONFIG_PACKAGE_tuic-client is not set
 CONFIG_PACKAGE_ubox=y
 CONFIG_PACKAGE_ubus=y
 CONFIG_PACKAGE_ubusd=y
